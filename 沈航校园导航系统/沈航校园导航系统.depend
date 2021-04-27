@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1619241188 source:c:\users\李鹏\documents\visual studio 2008\沈航校园导航系统\main.cpp
+	<iostream>
+	<cstdio>
+	<cstdlib>
+	<conio.h>
+	<cstring>
+

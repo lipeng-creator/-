@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1619525867 source:c:\users\李鹏\documents\visual studio 2008\四则运算生成器\main.cpp
+	<iostream>
+	<stdlib.h>
+	<cstring>
+	<time.h>
+	<cmath>
+	<fstream>
+

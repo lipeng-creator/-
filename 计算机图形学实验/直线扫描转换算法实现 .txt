@@ -1,0 +1,223 @@
+#include <Windows.h>
+#include <gl/glut.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+using namespace std;
+GLint winWidth = 700, winHeight = 700;
+GLint  x1, y11, x2, y2;
+int choice;
+GLint a[1000];
+int length;
+
+void init()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+}
+
+//在屏幕上画一个点
+inline void setPixel(GLint x, GLint y)
+{
+	glBegin(GL_POINTS);
+	glColor3f(1, 0, 1);
+	glVertex2i(x , y );
+	glEnd();
+}
+void Bresenham_Line(GLint x1,GLint y11,GLint x2,GLint y2)
+{
+	int t = 0;
+	if (x2 < x1)
+	{
+		t = x1; x1 = x2; x2 = t;
+		t = y11; y11 = y2; y2 = t;
+	}
+	//画第一个点
+	GLint x, y;
+	x = x1;
+	y = y11;
+	setPixel(x, y);
+	//首先处理直线平行坐标轴
+	if (y11 == y2)
+	{
+		//平行x轴
+		while (x < x2)
+		{
+			x++;
+			setPixel(x, y);
+		}
+		
+	}
+	if (x1 == x2)
+	{
+		//平行y轴
+		while (y < y2)
+		{
+			y++;
+			setPixel(x, y);
+		}
+		
+	}
+	int dx = x2 - x1, dy = y2 - y11;
+	int p;
+	int twoDy = 2 * dy, twoMinusDx = 2 * (dy - dx), twoDx = 2 * dx, twoMinusDy = 2 * (dx - dy);
+	int twoSum = 2 * (dy + dx);
+	double k = (double)dy / (double)dx;
+
+	//0<k<1的情况
+	if (k < 1.0 && k>0.0)
+	{
+		p = 2 * dy - dx;
+		while (x < x2)
+		{
+			x++;
+			if (p < 0)
+				p += twoDy;
+			   //p += 2 *dy;
+			else
+			{
+				y++;
+				p += twoMinusDx;
+				//p = 2 *(dy - dx);
+			}
+			setPixel(x, y);
+		}
+	}
+	//k>=1的情况
+	if (k >= 1.0)
+	{
+		p = dy;
+		while (y < y2)
+		{
+			y++;
+			if (p < 0)
+				p += twoDx;
+			    //p += 2 * dx;
+			else
+			{
+				x++;
+				p += twoMinusDy;
+				//p += 2 * (dx - dy);
+			}
+			setPixel(x, y);
+		}
+	}
+	//0>k>-1的情况
+	if (k > -1 && k < 0)
+	{
+		p = 2 * dy + dx;
+		while (x < x2)
+		{
+			x++;
+			if (p >= 0)
+				p += twoDy;
+			else
+			{
+				y--;
+				p += twoSum;
+			}
+			setPixel(x, y);
+		}
+	}
+	//k<-1的情况
+	if (k <= -1)
+	{
+		p = 2 * dx - dy;
+		while (y > y2)
+		{
+			y--;
+			if (p >= 0)
+				p -= twoDx;
+			else
+			{
+				x++;
+				p -= twoSum;
+			}
+			setPixel(x, y);
+		}
+	}
+	glFlush();
+}
+
+void display()
+{
+	init();
+	switch (choice)
+	{
+	case 1:Bresenham_Line(x1, y11, x2, y2);//任意斜率直线
+		break;
+	case 2:
+		Bresenham_Line(a[0], a[1], a[2], a[3]);
+		Bresenham_Line(a[2],a[3], a[4], a[5]);
+		Bresenham_Line(a[4],a[5], a[0], a[1]);
+		break;
+	case 3:
+	{
+		int i;
+		for (i = 0; i < length-1; i++)
+		{
+			Bresenham_Line(a[i * 2], a[i * 2 + 1], a[i * 2 + 2], a[i * 2 + 3]);
+		}
+		Bresenham_Line(a[2 * i], a[2 * i + 1], a[0], a[1]);
+		break;
+	}
+	default:
+		break;
+	}
+	Bresenham_Line(x1,y11,x2,y2);//任意斜率直线
+	/*Bresenham_Line(100,0,100,400);
+	Bresenham_Line(100, 400, 300, 500);
+	Bresenham_Line(300, 500, 300, 200);
+	Bresenham_Line(300, 200, 100, 0);*/
+}
+
+int main(int argc, char** argv)
+{
+	//cout << "输入起始点坐标，终点坐标: " << endl;
+	//cin >> x1 >> y11 >> x2 >> y2;
+	cout << "1：直线" << endl;
+	cout << "2：三角形" << endl;
+	cout << "3：多边形" << endl;
+	cout << "please input your choice:";
+	cin >> choice;
+	switch (choice)
+	{
+	case 1:
+		cout << "输入起始点坐标，终点坐标: " << endl;
+		cin >> x1 >> y11 >> x2 >> y2;
+		display();
+		break;
+	case 2:
+		cout << "依次输入三个点坐标: " << endl;
+		cin >> a[0] >> a[1] >> a[2] >> a[3] >> a[4] >> a[5];
+		display();
+		break;
+	case 3:
+		/*cout << "依次输入四个点坐标: " << endl;
+		cin >> a[0] >> a[1] >> a[2] >> a[3] >> a[4] >> a[5] >> a[6] >> a[7];
+		*/
+		cout << "输入顶点个数：" << endl;
+		cin >> length;
+		cout << "依次输入所有点坐标: " << endl;
+		for (int i = 0; i < length * 2; i++)
+		{
+			cin >> a[i];
+		}
+		display();
+		break;
+	defalut:
+		break;
+	}
+
+	glutInit(&argc, argv);
+	glutInitWindowPosition(100, 100);
+	glutInitWindowSize(winWidth, winHeight);
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+	glutCreateWindow("test by 李鹏");
+	//init();
+	glutDisplayFunc(display);
+	glutMainLoop();
+	return 0;
+}

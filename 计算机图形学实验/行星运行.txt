@@ -1,0 +1,237 @@
+#include <iostream>
+#define NDEBUG
+#include <GL/glut.h>
+#include <stdlib.h>
+
+static int year = 110, day = 110, moon = 110;
+GLdouble newMat[4][2] = { 0,0, 100,0, 100,100, 0,100 };
+const GLdouble mat[4][2] = { 0,0, 100,0, 100,100, 0,100 };
+int speed_direction = 1;
+
+bool mouseDown = false;
+
+float xrot = 0.0f;
+float yrot = 0.0f;
+
+float xdiff = 0.0f;
+float ydiff = 0.0f;
+
+bool isInner(int x, int y) {
+	unsigned short int c = 0;
+	if (x < newMat[0][0]) c |= 1; c <<= 1;
+	if (x > newMat[1][0]) c |= 1; c <<= 1;
+	if (y > newMat[2][1]) c |= 1; c <<= 1;
+	if (y < newMat[0][1]) c |= 1;
+	if (c == 0) return true;
+	else return false;
+}
+
+void mouse_process(int button, int state, int x, int y) {
+	
+	if( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN ) {
+	mouseDown = true;
+		xdiff = x - yrot;
+		ydiff = -y + xrot;
+	}
+	else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
+		speed_direction *= -1;
+	}
+		else
+			mouseDown = false;
+	
+}
+/*void mouse_process_active(int x, int y) {
+	y = 600 - y; //因为获取的鼠标位置
+	if (isInner(x, y)) {
+		double avgx = (newMat[0][0] + newMat[1][0]) / 2.0;
+		double avgy = (newMat[0][1] + newMat[3][1]) / 2.0;
+
+		double dx = x - avgx;
+		double dy = y - avgy;
+		for (int i = 0; i < 4; ++i) {
+			newMat[i][0] += dx;
+			newMat[i][1] += dy;
+
+			if (newMat[i][0] > 800) {
+				int dx = newMat[i][0] - 800;
+				for (int j = 0; j < 4; ++j)
+					newMat[j][0] -= dx;
+				MessageBox(NULL, TEXT("Coordinate out of range"), TEXT("Warning"), MB_ICONWARNING | MB_OK);
+				Sleep(1000);
+			}
+			else if (newMat[i][0] < 0) {
+				int dx = 0 - newMat[i][0];
+				for (int j = 0; j < 4; ++j)
+					newMat[j][0] += dx;
+				MessageBox(NULL, TEXT("Coordinate out of range"), TEXT("Warning"), MB_ICONWARNING | MB_OK);
+				Sleep(1000);
+			}
+			else if (newMat[i][1] > 600) {
+				int dy = newMat[i][1] - 600;
+				for (int j = 0; j < 4; ++j)
+					newMat[j][1] -= dy;
+				MessageBox(NULL, TEXT("Coordinate out of range"), TEXT("Warning"), MB_ICONWARNING | MB_OK);
+				Sleep(1000);
+			}
+			else if (newMat[i][1] < 0) {
+				int dy = 0 - newMat[i][1];
+				for (int j = 0; j < 4; ++j)
+					newMat[j][1] += dy;
+				MessageBox(NULL, TEXT("Coordinate out of range"), TEXT("Warning"), MB_ICONWARNING | MB_OK);
+				Sleep(1000);
+			}
+		}
+		glutPostRedisplay();
+	}
+}*/
+
+void init(void)
+{
+	//glClearColor(0.0, 0.0, 0.0, 0.0);
+	//glShadeModel(GL_SMOOTH);
+	//Sun
+	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat mat_shininess[] = { 50.0 };
+	GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+	// 定义太阳光源，它是一种白色的光源
+	GLfloat Light_Model_Ambient[] = { 0.2f , 0.2f , 0.2f , 1.0f }; //
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glShadeModel(GL_SMOOTH);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);//创建光源
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, Light_Model_Ambient); 
+	////开启灯光
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_DEPTH_TEST);
+}
+
+void display(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glColor3f(1.0, 1.0, 1.0);
+
+
+	// 实现鼠标旋转的核心
+	glRotatef(xrot, 1.0f, 0.0f, 0.0f);
+	glRotatef(yrot, 0.0f, 1.0f, 0.0f);
+
+	glPushMatrix();
+	//绘制太阳    
+	{
+		GLfloat sun_light_ambient[] = { 1.0, 0.0, 1.0, 0.0 };
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, sun_light_ambient);
+		//glutWireSphere(1.0, 20, 16);   /* draw sun */
+		glRotatef((GLfloat)year, 0.0, 1.0, 0.0);
+		glutSolidSphere(1.0, 20, 16);
+	}
+	//绘制地球 
+	{
+		GLfloat sun_light_ambient[] = { 1.0, 1.0, 0.0, 0.0 };
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, sun_light_ambient);
+		glTranslatef(2.0, 0.0, 0.0);
+		glRotatef((GLfloat)day, 0.0, 1.0, 0.0);
+		//glutWireSphere(0.2, 10, 8);    /* draw earth */
+		glutSolidSphere(0.2, 10, 8);
+	}
+     //绘制月球
+	{
+		GLfloat sun_light_ambient[] = { 0.0, 0.0, 1.0, 0.0 };
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, sun_light_ambient);
+		glTranslatef(1.0, 0.0, 0.0);
+		glRotatef((GLfloat)moon, 0.0, 1.0, 0.0);
+		//glutWireSphere(0.15, 10, 8);    /* draw moon */
+		glutSolidSphere(0.15, 10, 8);
+	}
+	glPopMatrix();
+
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glutSolidTeapot(0.5);
+	Sleep(10);
+	glutSwapBuffers();
+	glFlush();
+	glutPostRedisplay();
+
+}
+
+void reshape(int w, int h)
+{
+	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(60.0, (GLfloat)w / (GLfloat)h, 1.0, 20.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(0.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+
+	/*glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+	/glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	if (w <= h)
+		glOrtho(-1.5, 1.5, -1.5 * (GLfloat)h / (GLfloat)w,
+			1.5 * (GLfloat)h / (GLfloat)w, -10.0, 10.0);
+	else
+		glOrtho(-1.5 * (GLfloat)w / (GLfloat)h,
+			1.5 * (GLfloat)w / (GLfloat)h, -1.5, 1.5, -10.0, 10.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();*/
+}
+
+void keyboard(unsigned char key, int x, int y)
+{
+	switch (key) {
+	case 'd':
+		day = (day + 10) % 360;
+		moon = (moon + 5) % 360;
+		glutPostRedisplay();
+		break;
+	case 'D':
+		day = (day - 10) % 360;
+		glutPostRedisplay();
+		break;
+	case 'y':
+		year = (year + 5) % 360;
+		day = (day + 10) % 360;
+		moon = (moon + 5) % 360;
+		glutPostRedisplay();
+		break;
+	case 'Y':
+		year = (year - 5) % 360;
+		glutPostRedisplay();
+		break;
+	case 'm':
+		moon = (moon + 5) % 360;
+		glutPostRedisplay();
+		break;
+	case 'M':
+		moon = (moon - 5) % 360;
+		glutPostRedisplay();
+		break;
+	case 27:
+		exit(0);
+		break;
+	default:
+		break;
+	}
+}
+void mouse_process_passtive(int x, int y) {}
+int main(int argc, char** argv)
+{
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);//窗口使用RGB颜色，单缓存和深度缓存
+	glutInitWindowSize(800, 600);
+	glutInitWindowPosition(100, 100);
+	glutCreateWindow(argv[0]);
+
+	init();
+	glutDisplayFunc(display);
+	glutReshapeFunc(reshape);
+	glutKeyboardFunc(keyboard);
+	glutMouseFunc(&mouse_process);
+	//glutMotionFunc(mouse_process_active);
+    glutPassiveMotionFunc(mouse_process_passtive);
+
+	glutMainLoop();
+	return 0;
+}
